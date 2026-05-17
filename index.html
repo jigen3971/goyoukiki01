@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>御用聞きくん</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="top-nav">
+  <button id="btn-back" class="nav-btn hidden" onclick="goBack()">&#8592;</button>
+  <h1 id="page-title">御用聞きくん</h1>
+  <button id="btn-customers" class="nav-btn" onclick="showCustomers()">&#128101;</button>
+</nav>
+<div id="screen-calendar" class="screen active">
+  <div class="month-nav">
+    <button id="prev-month" class="month-btn" onclick="prevMonth()">&#8249;</button>
+    <h2 id="month-label"></h2>
+    <button id="next-month" class="month-btn" onclick="nextMonth()">&#8250;</button>
+  </div>
+  <div id="cal-grid" class="cal-grid"></div>
+</div>
+<div id="screen-day" class="screen">
+  <h2 id="day-title" class="day-header"></h2>
+  <div id="visit-list"></div>
+  <button class="fab" onclick="showAddForm()">+</button>
+  <div style="height:100px;"></div>
+</div>
+<div id="screen-form" class="screen">
+  <div class="form-section">
+    <h3>得意先</h3>
+    <select id="f-customer" onchange="onCustomerChange()"><option value="">得意先を選択してください</option></select>
+    <div id="f-address-display" class="address-display"></div>
+    <div class="btn-row">
+      <button class="btn btn-maps" onclick="openCustomerMaps()">地図で開く</button>
+      <button class="btn btn-gps" onclick="getGPS()">現在地取得</button>
+    </div>
+    <input type="text" id="f-gps" placeholder="GPS座標（自動取得）" readonly style="font-size:12px;color:#888;">
+  </div>
+  <div class="form-section">
+    <h3>訪問情報</h3>
+    <label class="field-label">訪問時刻</label>
+    <input type="time" id="f-time">
+    <label class="field-label">担当者</label>
+    <select id="f-staff">
+      <option value="">担当者を選択</option>
+      <option>社長</option><option>トラ</option><option>心</option><option>お届け</option>
+    </select>
+  </div>
+  <div class="form-section">
+    <h3>メモ</h3>
+    <textarea id="f-memo" placeholder="訪問メモを入力..."></textarea>
+  </div>
+  <div class="form-section">
+    <h3 class="parts-title">部品注文メモ</h3>
+    <textarea id="f-parts-memo" class="parts-textarea" placeholder="部品注文内容を入力..."></textarea>
+  </div>
+  <div class="form-section">
+    <h3>録音</h3>
+    <button class="btn btn-record" id="btn-record" onclick="toggleRecording()">録音開始</button>
+    <div id="recording-indicator" class="recording-indicator" style="display:none;"><div class="rec-dot"></div><span>録音中...</span></div>
+    <div id="recordings-list" style="margin-top:10px;"></div>
+  </div>
+  <div class="form-section">
+    <h3>写真（ローカル保存）</h3>
+    <input type="file" accept="image/*" multiple id="photo-input" style="display:none;" onchange="handlePhotoInput(event)">
+    <button class="btn btn-photo" onclick="document.getElementById('photo-input').click()">写真を追加</button>
+    <p class="note">※ 写真はこのデバイスのみに保存されます</p>
+    <div id="photos-preview"></div>
+  </div>
+  <button class="btn btn-save" onclick="saveVisit()">保存する</button>
+  <button class="btn btn-delete-visit" id="btn-delete-visit" onclick="deleteCurrentVisit()" style="display:none;">この訪問記録を削除</button>
+  <div style="height:80px;"></div>
+</div>
+<div id="screen-customers" class="screen">
+  <button class="btn btn-save" onclick="showAddCustomer()" style="margin-bottom:16px;">+ 得意先を追加</button>
+  <div id="customer-list"></div>
+  <div id="customer-form" style="display:none;">
+    <div class="form-section" style="border:2px solid #1565c0;margin-top:16px;">
+      <h3 id="customer-form-title">得意先を追加</h3>
+      <label class="field-label">得意先名 ※必須</label>
+      <input type="text" id="c-name" placeholder="例：山田商事">
+      <label class="field-label">住所</label>
+      <input type="text" id="c-address" placeholder="例：福島県郡山市〇〇1-2-3">
+      <label class="field-label">電話番号</label>
+      <input type="tel" id="c-phone" placeholder="例：024-000-0000">
+      <label class="field-label">備考</label>
+      <textarea id="c-note" placeholder="メモなど..." style="min-height:60px;"></textarea>
+      <div class="btn-row">
+        <button class="btn btn-save" onclick="saveCustomer()" style="flex:1;">保存</button>
+        <button class="btn" onclick="cancelCustomerForm()" style="flex:1;background:#eee;color:#333;">キャンセル</button>
+      </div>
+    </div>
+  </div>
+  <div style="height:80px;"></div>
+</div>
+<div id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>
