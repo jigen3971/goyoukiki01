@@ -28,7 +28,28 @@ function getGPS() { if (!navigator.geolocation) { showToast("GPS非対応"); ret
 function openCustomerMaps() { const data = getData(), id = document.getElementById("f-customer").value, c = data.customers.find(c => c.id === id); if (!c || !c.address) { showToast("住所を設定してください"); return; } window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(c.address), "_blank"); }
 let mediaRecorder = null, isRecording = false, recordChunks = [];
 async function toggleRecording() { if (isRecording) stopRecording(); else await startRecording(); }
-async function startRecording() { try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); recordChunks = []; mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordChunks.push(e.data); }; mediaRecorder.onstop = () => { stream.getTracks().forEach(t => t.stop()); const blob = new Blob(recordChunks, { type: "audio/webm" }); const reader = new FileReader(); reader.onload = () => { formRecordings.push({ base64: reader.result, url: reader.result }); renderRecordingsList(); }; reader.readAsDataURL(blob); }; mediaRecorder.start(); isRecording = true; document.getElementById("btn-record").textContent = "停止"; document.getElementById("btn-record").classList.add("active"); document.getElementById("recording-indicator").style.display = "flex"; } catch { showToast("マイクが許可されていません"); } }
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = ["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg"].find(t => MediaRecorder.isTypeSupported(t)) || "";
+    mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+    recordChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      const type = mediaRecorder.mimeType || "audio/mp4";
+      const blob = new Blob(recordChunks, { type });
+      const reader = new FileReader();
+      reader.onload = () => { formRecordings.push({ base64: reader.result, url: reader.result }); renderRecordingsList(); };
+      reader.readAsDataURL(blob);
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    document.getElementById("btn-record").textContent = "停止";
+    document.getElementById("btn-record").classList.add("active");
+    document.getElementById("recording-indicator").style.display = "flex";
+  } catch { showToast("マイクが許可されていません"); }
+}
 function stopRecording() { if (mediaRecorder && isRecording) { mediaRecorder.stop(); isRecording = false; document.getElementById("btn-record").textContent = "録音開始"; document.getElementById("btn-record").classList.remove("active"); document.getElementById("recording-indicator").style.display = "none"; } }
 function renderRecordingsList() { const con = document.getElementById("recordings-list"); if (formRecordings.length === 0) { con.innerHTML = ""; return; } let html = ""; formRecordings.forEach((r, i) => { html += '<div class="recording-item"><audio controls src="' + (r.url || r.base64) + '" style="flex:1;height:36px;"></audio><button class="btn-rec-del" onclick="deleteRecording(' + i + ')">削除</button></div>'; }); con.innerHTML = html; }
 function deleteRecording(i) { formRecordings.splice(i, 1); renderRecordingsList(); }
